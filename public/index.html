@@ -1,0 +1,1482 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Latch</title>
+
+  <style>
+    :root {
+      --bg: #0b0b0b;
+      --panel: #101010;
+      --text: #e7e7e4;
+      --secondary: #92928f;
+      --muted: #5e5e5b;
+      --border: #242424;
+      --border-light: #303030;
+      --green: #879d80;
+
+      --sans:
+        Inter,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      --mono:
+        "SFMono-Regular",
+        Consolas,
+        "Liberation Mono",
+        monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      background: var(--bg);
+      color-scheme: dark;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    button,
+    input {
+      font: inherit;
+    }
+
+    button {
+      cursor: pointer;
+    }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    ::selection {
+      background: #343434;
+      color: #fff;
+    }
+
+    /* -----------------------------
+       Loading screen
+    ----------------------------- */
+
+    .page-loader {
+      position: fixed;
+      inset: 0;
+      z-index: 9999;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      background: #0b0b0b;
+
+      opacity: 0;
+      visibility: hidden;
+      pointer-events: none;
+
+      transition:
+        opacity 180ms ease,
+        visibility 180ms ease;
+    }
+
+    .page-loader.visible {
+      opacity: 1;
+      visibility: visible;
+      pointer-events: all;
+    }
+
+    .loader-spinner {
+      width: 18px;
+      height: 18px;
+
+      border: 2px solid #303030;
+      border-top-color: #e7e7e4;
+      border-radius: 50%;
+
+      animation: spin 700ms linear infinite;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
+
+    /* -----------------------------
+       General
+    ----------------------------- */
+
+    .page {
+      min-height: 100vh;
+    }
+
+    .container {
+      width: min(1120px, calc(100% - 48px));
+      margin: 0 auto;
+    }
+
+    .site-header {
+      height: 72px;
+      border-bottom: 1px solid var(--border);
+
+      display: flex;
+      align-items: center;
+    }
+
+    .header-inner {
+      width: 100%;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .brand {
+      padding: 0;
+      border: 0;
+      background: transparent;
+
+      color: var(--text);
+      font-size: 16px;
+      font-weight: 550;
+      letter-spacing: -0.035em;
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      gap: 27px;
+
+      color: var(--secondary);
+      font-size: 13px;
+    }
+
+    .nav a {
+      transition: color 150ms ease;
+    }
+
+    .nav a:hover {
+      color: var(--text);
+    }
+
+    .nav-actions {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+      margin-left: 10px;
+    }
+
+    .button {
+      min-height: 34px;
+      padding: 0 13px;
+
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+
+      border: 1px solid var(--border-light);
+      background: transparent;
+      color: var(--text);
+
+      font-size: 12px;
+      font-weight: 500;
+
+      transition:
+        background 150ms ease,
+        border-color 150ms ease,
+        color 150ms ease;
+    }
+
+    .button:hover {
+      background: #151515;
+      border-color: #444;
+    }
+
+    .button.primary {
+      background: #deded9;
+      border-color: #deded9;
+      color: #0b0b0b;
+    }
+
+    .button.primary:hover {
+      background: #fff;
+      border-color: #fff;
+    }
+
+    .button.large {
+      min-height: 40px;
+      padding: 0 16px;
+      font-size: 13px;
+    }
+
+    .eyebrow {
+      margin-bottom: 22px;
+
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+    }
+
+    /* -----------------------------
+       Landing
+    ----------------------------- */
+
+    .hero {
+      padding: 112px 0 105px;
+    }
+
+    .hero-grid {
+      display: grid;
+      grid-template-columns: minmax(0, 1.2fr) minmax(340px, .8fr);
+      gap: 90px;
+      align-items: end;
+    }
+
+    .hero h1 {
+      max-width: 700px;
+      margin: 0;
+
+      font-size: clamp(44px, 6vw, 70px);
+      line-height: .98;
+      font-weight: 500;
+      letter-spacing: -0.055em;
+    }
+
+    .hero-copy {
+      max-width: 550px;
+      margin: 28px 0 0;
+
+      color: var(--secondary);
+      font-size: 16px;
+      line-height: 1.65;
+    }
+
+    .hero-actions {
+      display: flex;
+      gap: 9px;
+      margin-top: 31px;
+    }
+
+    .hero-note {
+      padding-bottom: 4px;
+
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      line-height: 1.7;
+    }
+
+    .hero-note strong {
+      color: var(--secondary);
+      font-weight: 400;
+    }
+
+    /* -----------------------------
+       Analysis example
+    ----------------------------- */
+
+    .analysis {
+      padding: 0 0 110px;
+    }
+
+    .analysis-header {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+
+      margin-bottom: 15px;
+    }
+
+    .section-label {
+      color: var(--secondary);
+      font-family: var(--mono);
+      font-size: 11px;
+    }
+
+    .section-meta {
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .analysis-window {
+      border: 1px solid var(--border);
+      background: var(--panel);
+    }
+
+    .window-bar {
+      height: 38px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      padding: 0 13px;
+      border-bottom: 1px solid var(--border);
+
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .window-file {
+      color: var(--secondary);
+    }
+
+    .window-status {
+      color: var(--green);
+    }
+
+    .analysis-body {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      min-height: 280px;
+    }
+
+    .code-panel {
+      padding: 24px;
+    }
+
+    .code-panel + .code-panel {
+      border-left: 1px solid var(--border);
+    }
+
+    .code-title {
+      margin-bottom: 20px;
+
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .code {
+      margin: 0;
+
+      color: #b8b8b3;
+      font-family: var(--mono);
+      font-size: 12px;
+      line-height: 1.85;
+      white-space: pre-wrap;
+    }
+
+    .address {
+      color: #555552;
+    }
+
+    .keyword {
+      color: #c4c4be;
+    }
+
+    .string {
+      color: #a89583;
+    }
+
+    .comment {
+      color: #535350;
+    }
+
+    /* -----------------------------
+       Capabilities
+    ----------------------------- */
+
+    .capabilities {
+      padding: 0 0 120px;
+    }
+
+    .capability-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      border-top: 1px solid var(--border);
+    }
+
+    .capability {
+      padding: 24px 24px 28px 0;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .capability + .capability {
+      padding-left: 24px;
+      border-left: 1px solid var(--border);
+    }
+
+    .capability:nth-child(4),
+    .capability:nth-child(5),
+    .capability:nth-child(6) {
+      padding-top: 30px;
+      border-bottom: 0;
+    }
+
+    .capability-number {
+      margin-bottom: 35px;
+
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+    }
+
+    .capability h3 {
+      margin: 0 0 9px;
+
+      font-size: 15px;
+      font-weight: 500;
+      letter-spacing: -0.02em;
+    }
+
+    .capability p {
+      max-width: 280px;
+      margin: 0;
+
+      color: var(--secondary);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    /* -----------------------------
+       Tools
+    ----------------------------- */
+
+    .tools {
+      padding: 0 0 120px;
+    }
+
+    .tools-row {
+      display: grid;
+      grid-template-columns: 1fr 2fr;
+
+      padding: 22px 0;
+      border-top: 1px solid var(--border);
+    }
+
+    .tools-row:last-child {
+      border-bottom: 1px solid var(--border);
+    }
+
+    .tools-name {
+      color: var(--text);
+      font-size: 14px;
+    }
+
+    .tools-description {
+      color: var(--secondary);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .tools-description span {
+      color: var(--muted);
+    }
+
+    /* -----------------------------
+       Closing
+    ----------------------------- */
+
+    .closing {
+      padding: 0 0 100px;
+    }
+
+    .closing-inner {
+      padding-top: 35px;
+      border-top: 1px solid var(--border);
+    }
+
+    .closing p {
+      max-width: 620px;
+      margin: 0;
+
+      color: var(--secondary);
+      font-size: 15px;
+      line-height: 1.7;
+    }
+
+    /* -----------------------------
+       Auth
+    ----------------------------- */
+
+    .auth-page {
+      min-height: calc(100vh - 72px);
+
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+
+      padding: 100px 0;
+    }
+
+    .auth-wrap {
+      width: min(420px, 100%);
+    }
+
+    .auth-heading {
+      margin-bottom: 36px;
+    }
+
+    .auth-heading h1 {
+      margin: 0 0 11px;
+
+      font-size: 30px;
+      font-weight: 500;
+      letter-spacing: -0.045em;
+    }
+
+    .auth-heading p {
+      margin: 0;
+
+      color: var(--secondary);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .auth-form {
+      display: flex;
+      flex-direction: column;
+      gap: 19px;
+    }
+
+    .field {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .field label {
+      color: var(--secondary);
+      font-family: var(--mono);
+      font-size: 10px;
+      text-transform: uppercase;
+    }
+
+    .field input {
+      width: 100%;
+      height: 42px;
+
+      padding: 0 12px;
+
+      border: 1px solid var(--border-light);
+      outline: none;
+
+      background: #0d0d0d;
+      color: var(--text);
+
+      font-size: 13px;
+
+      transition:
+        border-color 150ms ease,
+        background 150ms ease;
+    }
+
+    .field input:focus {
+      border-color: #4a4a48;
+      background: #101010;
+    }
+
+    .auth-submit {
+      width: 100%;
+      margin-top: 5px;
+    }
+
+    .auth-footer {
+      margin-top: 24px;
+
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.6;
+      text-align: center;
+    }
+
+    .auth-footer button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+
+      color: var(--secondary);
+      font-size: inherit;
+    }
+
+    .auth-footer button:hover {
+      color: var(--text);
+    }
+
+    /* -----------------------------
+       Registration closed
+    ----------------------------- */
+
+    .registration-closed {
+      padding: 24px 0;
+
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .registration-closed-title {
+      margin-bottom: 10px;
+
+      color: var(--text);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .registration-closed-copy {
+      margin: 0;
+
+      color: var(--secondary);
+      font-size: 13px;
+      line-height: 1.65;
+    }
+
+    .registration-note {
+      margin-top: 24px;
+
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      line-height: 1.7;
+    }
+
+    /* -----------------------------
+       Footer
+    ----------------------------- */
+
+    .site-footer {
+      border-top: 1px solid var(--border);
+    }
+
+    .footer-inner {
+      min-height: 75px;
+
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .footer-links {
+      display: flex;
+      gap: 20px;
+    }
+
+    .footer-links button {
+      padding: 0;
+      border: 0;
+      background: transparent;
+
+      color: var(--muted);
+      font-size: 11px;
+    }
+
+    .footer-links button:hover {
+      color: var(--secondary);
+    }
+
+    /* -----------------------------
+       Toast
+    ----------------------------- */
+
+    .toast {
+      position: fixed;
+      right: 22px;
+      bottom: 22px;
+      z-index: 900;
+
+      max-width: 300px;
+      padding: 11px 13px;
+
+      border: 1px solid var(--border-light);
+      background: #111;
+
+      color: var(--secondary);
+      font-family: var(--mono);
+      font-size: 10px;
+
+      opacity: 0;
+      transform: translateY(6px);
+      pointer-events: none;
+
+      transition:
+        opacity 180ms ease,
+        transform 180ms ease;
+    }
+
+    .toast.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* -----------------------------
+       Responsive
+    ----------------------------- */
+
+    @media (max-width: 850px) {
+      .hero-grid {
+        grid-template-columns: 1fr;
+        gap: 45px;
+      }
+
+      .hero {
+        padding-top: 85px;
+      }
+
+      .analysis-body {
+        grid-template-columns: 1fr;
+      }
+
+      .code-panel + .code-panel {
+        border-left: 0;
+        border-top: 1px solid var(--border);
+      }
+
+      .capability-grid {
+        grid-template-columns: 1fr 1fr;
+      }
+
+      .capability:nth-child(3) {
+        border-left: 0;
+        padding-left: 0;
+      }
+
+      .capability:nth-child(4),
+      .capability:nth-child(5),
+      .capability:nth-child(6) {
+        border-bottom: 1px solid var(--border);
+        padding-top: 24px;
+      }
+
+      .capability:nth-child(4),
+      .capability:nth-child(6) {
+        border-left: 0;
+        padding-left: 0;
+      }
+
+      .capability:nth-child(5) {
+        border-left: 1px solid var(--border);
+      }
+    }
+
+    @media (max-width: 650px) {
+      .container {
+        width: min(100% - 32px, 1120px);
+      }
+
+      .site-header {
+        height: 64px;
+      }
+
+      .nav > a {
+        display: none;
+      }
+
+      .nav {
+        gap: 8px;
+      }
+
+      .nav-actions {
+        margin-left: 0;
+      }
+
+      .hero {
+        padding: 70px 0 80px;
+      }
+
+      .hero h1 {
+        font-size: 43px;
+      }
+
+      .hero-copy {
+        font-size: 14px;
+      }
+
+      .hero-actions {
+        flex-wrap: wrap;
+      }
+
+      .analysis,
+      .capabilities,
+      .tools {
+        padding-bottom: 85px;
+      }
+
+      .capability-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .capability,
+      .capability + .capability,
+      .capability:nth-child(4),
+      .capability:nth-child(5),
+      .capability:nth-child(6) {
+        padding: 22px 0;
+        border-left: 0;
+        border-bottom: 1px solid var(--border);
+      }
+
+      .capability-number {
+        margin-bottom: 25px;
+      }
+
+      .tools-row {
+        grid-template-columns: 1fr;
+        gap: 9px;
+      }
+
+      .auth-page {
+        padding: 70px 0;
+      }
+
+      .footer-inner {
+        min-height: 65px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+
+  <!-- Simple page loading screen -->
+  <div class="page-loader" id="page-loader">
+    <div class="loader-spinner"></div>
+  </div>
+
+  <main id="app"></main>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    const state = {
+      view: "landing"
+    };
+
+    let toastTimer;
+
+    function transitionTo(view) {
+      if (state.view === view) return;
+
+      const loader = document.getElementById("page-loader");
+
+      loader.classList.add("visible");
+
+      setTimeout(() => {
+        state.view = view;
+
+        render();
+
+        window.scrollTo({
+          top: 0,
+          behavior: "instant"
+        });
+      }, 300);
+
+      setTimeout(() => {
+        loader.classList.remove("visible");
+      }, 520);
+    }
+
+    function showToast(message) {
+      const toast = document.getElementById("toast");
+
+      clearTimeout(toastTimer);
+
+      toast.textContent = message;
+      toast.classList.add("visible");
+
+      toastTimer = setTimeout(() => {
+        toast.classList.remove("visible");
+      }, 3000);
+    }
+
+    function login() {
+      const email =
+        document.getElementById("login-email")?.value.trim();
+
+      const password =
+        document.getElementById("login-password")?.value;
+
+      if (!email || !password) {
+        showToast("Enter your email and password");
+        return;
+      }
+
+      showToast("Authentication will be connected soon");
+    }
+
+    function renderHeader() {
+      return `
+        <header class="site-header">
+          <div class="container header-inner">
+
+            <button
+              class="brand"
+              onclick="transitionTo('landing')"
+            >
+              latch
+            </button>
+
+            <nav class="nav">
+
+              <a
+                href="#"
+                onclick="event.preventDefault(); transitionTo('landing')"
+              >
+                Product
+              </a>
+
+              <a
+                href="#"
+                onclick="event.preventDefault(); transitionTo('landing')"
+              >
+                Developers
+              </a>
+
+              <a
+                href="#"
+                onclick="event.preventDefault(); transitionTo('landing')"
+              >
+                Tools
+              </a>
+
+              <div class="nav-actions">
+
+                <button
+                  class="button"
+                  onclick="transitionTo('login')"
+                >
+                  Sign in
+                </button>
+
+                <button
+                  class="button primary"
+                  onclick="transitionTo('register')"
+                >
+                  Register
+                </button>
+
+              </div>
+
+            </nav>
+
+          </div>
+        </header>
+      `;
+    }
+
+    function renderFooter() {
+      return `
+        <footer class="site-footer">
+          <div class="container footer-inner">
+
+            <div>
+              latch © 2026
+            </div>
+
+            <div class="footer-links">
+
+              <button
+                onclick="showToast('Documentation is coming soon')"
+              >
+                Documentation
+              </button>
+
+              <button
+                onclick="showToast('Contact is coming soon')"
+              >
+                Contact
+              </button>
+
+            </div>
+
+          </div>
+        </footer>
+      `;
+    }
+
+    function renderLanding() {
+      return `
+        <div class="page">
+
+          ${renderHeader()}
+
+          <section class="hero">
+            <div class="container">
+
+              <div class="hero-grid">
+
+                <div>
+
+                  <div class="eyebrow">
+                    Reverse engineering tools
+                  </div>
+
+                  <h1>
+                    A second pair of eyes for reverse engineering.
+                  </h1>
+
+                  <p class="hero-copy">
+                    Latch connects AI directly to the tools you already use.
+                    Inspect binaries, follow references, understand functions
+                    and move through unfamiliar code without constantly
+                    switching context.
+                  </p>
+
+                  <div class="hero-actions">
+
+                    <button
+                      class="button primary large"
+                      onclick="transitionTo('register')"
+                    >
+                      Get started
+                    </button>
+
+                    <button
+                      class="button large"
+                      onclick="transitionTo('login')"
+                    >
+                      Sign in
+                    </button>
+
+                  </div>
+
+                </div>
+
+                <div class="hero-note">
+                  <strong>Built around the tools.</strong><br>
+                  IDA Pro, Ghidra, x64dbg, WinDbg<br>
+                  and MCP-based workflows.
+                </div>
+
+              </div>
+
+            </div>
+          </section>
+
+          <section class="analysis">
+            <div class="container">
+
+              <div class="analysis-header">
+
+                <div class="section-label">
+                  Analysis
+                </div>
+
+                <div class="section-meta">
+                  sample.exe / x64 / PE
+                </div>
+
+              </div>
+
+              <div class="analysis-window">
+
+                <div class="window-bar">
+
+                  <span class="window-file">
+                    sample.exe
+                  </span>
+
+                  <span class="window-status">
+                    analysis complete
+                  </span>
+
+                </div>
+
+                <div class="analysis-body">
+
+                  <div class="code-panel">
+
+                    <div class="code-title">
+                      Disassembly
+                    </div>
+
+                    <pre class="code"><span class="address">00007FF6A14A1030</span>  push    rbp
+<span class="address">00007FF6A14A1031</span>  mov     rbp, rsp
+<span class="address">00007FF6A14A1034</span>  sub     rsp, 30h
+<span class="address">00007FF6A14A1038</span>  call    sub_7FF6A14A2200
+<span class="address">00007FF6A14A103D</span>  test    eax, eax
+<span class="address">00007FF6A14A103F</span>  jz      short loc_7FF6A14A1052
+<span class="address">00007FF6A14A1041</span>  lea     rcx, <span class="string">aInvalidState</span>
+<span class="address">00007FF6A14A1048</span>  call    sub_7FF6A14A31C0</pre>
+
+                  </div>
+
+                  <div class="code-panel">
+
+                    <div class="code-title">
+                      Decompiled
+                    </div>
+
+                    <pre class="code"><span class="keyword">bool</span> __fastcall validate_state(
+    <span class="keyword">void</span> *context)
+{
+    <span class="keyword">int</span> result;
+
+    result = check_context(context);
+
+    <span class="keyword">if</span> (!result)
+        <span class="keyword">return</span> <span class="keyword">false</span>;
+
+    report_error(<span class="string">"Invalid state"</span>);
+
+    <span class="keyword">return</span> <span class="keyword">true</span>;
+}
+
+<span class="comment">// 2 xrefs</span>
+<span class="comment">// called from init_context</span></pre>
+
+                  </div>
+
+                </div>
+
+              </div>
+
+            </div>
+          </section>
+
+          <section class="capabilities">
+            <div class="container">
+
+              <div class="eyebrow">
+                What Latch is useful for
+              </div>
+
+              <div class="capability-grid">
+
+                <div class="capability">
+                  <div class="capability-number">01</div>
+                  <h3>Understand functions</h3>
+                  <p>
+                    Get a quick explanation of unfamiliar functions,
+                    arguments, control flow and likely purpose.
+                  </p>
+                </div>
+
+                <div class="capability">
+                  <div class="capability-number">02</div>
+                  <h3>Follow the code</h3>
+                  <p>
+                    Trace calls, xrefs and related functions instead of
+                    manually jumping around the database.
+                  </p>
+                </div>
+
+                <div class="capability">
+                  <div class="capability-number">03</div>
+                  <h3>Work from evidence</h3>
+                  <p>
+                    Keep analysis grounded in the binary, strings,
+                    imports, decompiler output and debugger state.
+                  </p>
+                </div>
+
+                <div class="capability">
+                  <div class="capability-number">04</div>
+                  <h3>Search faster</h3>
+                  <p>
+                    Find strings, symbols, references and relevant
+                    locations without breaking your workflow.
+                  </p>
+                </div>
+
+                <div class="capability">
+                  <div class="capability-number">05</div>
+                  <h3>Use your existing setup</h3>
+                  <p>
+                    Latch works around MCP-connected reverse engineering
+                    tools rather than replacing the tools themselves.
+                  </p>
+                </div>
+
+                <div class="capability">
+                  <div class="capability-number">06</div>
+                  <h3>Keep context</h3>
+                  <p>
+                    Continue an investigation without repeatedly
+                    explaining what you already found.
+                  </p>
+                </div>
+
+              </div>
+
+            </div>
+          </section>
+
+          <section class="tools">
+            <div class="container">
+
+              <div class="eyebrow">
+                Integrations
+              </div>
+
+              <div class="tools-row">
+
+                <div class="tools-name">
+                  IDA Pro
+                </div>
+
+                <div class="tools-description">
+                  Functions, decompilation, strings, xrefs and database
+                  inspection. <span>Primary workflow.</span>
+                </div>
+
+              </div>
+
+              <div class="tools-row">
+
+                <div class="tools-name">
+                  Ghidra
+                </div>
+
+                <div class="tools-description">
+                  Program analysis, decompiler output and navigation
+                  through large binaries.
+                </div>
+
+              </div>
+
+              <div class="tools-row">
+
+                <div class="tools-name">
+                  x64dbg
+                </div>
+
+                <div class="tools-description">
+                  Debugger state, registers, memory and runtime behaviour.
+                </div>
+
+              </div>
+
+              <div class="tools-row">
+
+                <div class="tools-name">
+                  WinDbg
+                </div>
+
+                <div class="tools-description">
+                  Native debugging and Windows-specific investigation.
+                </div>
+
+              </div>
+
+              <div class="tools-row">
+
+                <div class="tools-name">
+                  MCP
+                </div>
+
+                <div class="tools-description">
+                  Connect Latch to tools and expose their capabilities
+                  directly to the agent.
+                </div>
+
+              </div>
+
+            </div>
+          </section>
+
+          <section class="closing">
+            <div class="container">
+
+              <div class="closing-inner">
+
+                <p>
+                  Latch is made for the point where a binary stops making
+                  sense and you need another way to look at it.
+                </p>
+
+              </div>
+
+            </div>
+          </section>
+
+          ${renderFooter()}
+
+        </div>
+      `;
+    }
+
+    function renderLogin() {
+      return `
+        <div class="page">
+
+          ${renderHeader()}
+
+          <main class="auth-page">
+            <div class="container">
+
+              <div class="auth-wrap">
+
+                <div class="auth-heading">
+
+                  <div class="eyebrow">
+                    Account
+                  </div>
+
+                  <h1>
+                    Sign in
+                  </h1>
+
+                  <p>
+                    Sign in to access your Latch account.
+                  </p>
+
+                </div>
+
+                <form
+                  class="auth-form"
+                  onsubmit="event.preventDefault(); login();"
+                >
+
+                  <div class="field">
+
+                    <label for="login-email">
+                      Email
+                    </label>
+
+                    <input
+                      id="login-email"
+                      type="email"
+                      autocomplete="email"
+                      placeholder="you@example.com"
+                    >
+
+                  </div>
+
+                  <div class="field">
+
+                    <label for="login-password">
+                      Password
+                    </label>
+
+                    <input
+                      id="login-password"
+                      type="password"
+                      autocomplete="current-password"
+                      placeholder="Password"
+                    >
+
+                  </div>
+
+                  <button
+                    type="submit"
+                    class="button primary large auth-submit"
+                  >
+                    Sign in
+                  </button>
+
+                </form>
+
+                <div class="auth-footer">
+                  Don't have an account?
+                  <button onclick="transitionTo('register')">
+                    Register
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+          </main>
+
+          ${renderFooter()}
+
+        </div>
+      `;
+    }
+
+    function renderRegister() {
+      return `
+        <div class="page">
+
+          ${renderHeader()}
+
+          <main class="auth-page">
+            <div class="container">
+
+              <div class="auth-wrap">
+
+                <div class="auth-heading">
+
+                  <div class="eyebrow">
+                    Account
+                  </div>
+
+                  <h1>
+                    Register
+                  </h1>
+
+                  <p>
+                    Create an account to use Latch.
+                  </p>
+
+                </div>
+
+                <div class="registration-closed">
+
+                  <div class="registration-closed-title">
+                    New registrations are not currently being accepted.
+                  </div>
+
+                  <p class="registration-closed-copy">
+                    Latch is currently closed to new registrations.
+                    If you already have an account, you can sign in.
+                  </p>
+
+                </div>
+
+                <div class="registration-note">
+                  Registration availability will be updated here when
+                  new accounts can be created.
+                </div>
+
+                <div class="auth-footer">
+                  Already have an account?
+                  <button onclick="transitionTo('login')">
+                    Sign in
+                  </button>
+                </div>
+
+              </div>
+
+            </div>
+          </main>
+
+          ${renderFooter()}
+
+        </div>
+      `;
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+
+      if (state.view === "login") {
+        app.innerHTML = renderLogin();
+        return;
+      }
+
+      if (state.view === "register") {
+        app.innerHTML = renderRegister();
+        return;
+      }
+
+      app.innerHTML = renderLanding();
+    }
+
+    render();
+  </script>
+
+</body>
+</html>
